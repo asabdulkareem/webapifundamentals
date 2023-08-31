@@ -3,22 +3,27 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace emptyproject.Controllers;
 [ApiController]
+[Route("api/cities")]
 public class CitiesController : ControllerBase
 {
     [HttpGet]
-    [Route("api/cities")]
-    public JsonResult  GetCities()
-    {
-        return new JsonResult(CitiesDataStore.Current.Cities);
+    public ActionResult<IEnumerable<CityDto>> GetCities()
+    { 
+        return Ok(CitiesDataStore.Current.Cities);
     }
-    [HttpGet]
-    [Route("api/cities/{id}")]
+
+    [HttpGet("{id}")]
     public ActionResult<CityDto> GetCity(int id)
     {
-        var cityToReturn = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == id);
-        if(cityToReturn == null)
-           return NotFound();
-        else
-            return Ok(cityToReturn);
+        // find city
+        var cityToReturn = CitiesDataStore.Current.Cities
+            .FirstOrDefault(c => c.Id == id);
+
+        if (cityToReturn == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(cityToReturn);
     }
 }
