@@ -19,7 +19,7 @@ public class PointsOfInterestController : ControllerBase
         return Ok(city.PointsOfInterest);
     }
 
-    [HttpGet("{pointofinterestid}")]
+    [HttpGet("{pointofinterestid}", Name ="GetPointOfInterest")]
     public ActionResult<PointOfInterestDto> GetPointOfInterest(
         int cityId, int pointOfInterestId)
     {
@@ -39,5 +39,58 @@ public class PointsOfInterestController : ControllerBase
         }
 
         return Ok(pointOfInterest);
+    }
+    [HttpPost]
+    public ActionResult<PointOfInterestDto> CreatePointOfInterest(
+        int cityId, PointOfInterestForCreationDto pointOfInterestDto)
+    {
+        if(!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        var city = CitiesDataStore.Current.Cities
+            .FirstOrDefault(c => c.Id == cityId);
+        if (city == null)
+        {
+            return NotFound();
+        }
+
+        var pointOfInterest = new PointOfInterestDto()
+        {
+            Id = city.PointsOfInterest.Max(p => p.Id) + 1,
+            Name = pointOfInterestDto.Name,
+            Description = pointOfInterestDto.Description
+        };
+
+        city.PointsOfInterest.Add(pointOfInterest);
+
+        return CreatedAtRoute(
+            "GetPointOfInterest",
+            new { cityId = cityId, pointOfInterestId = pointOfInterest.Id },
+            pointOfInterest);
+    }
+    [HttpPut("{pointofinterestid}")]
+    public ActionResult UpdatePointOfInterest(int cityId, int pointOfInterestId,
+        PointOfInterestForUpdateDto pointOfInterest)
+    {
+        var city = CitiesDataStore.Current.Cities
+            .FirstOrDefault(c => c.Id == cityId);
+        if (city == null)
+        {
+            return NotFound();
+        }
+
+        // find point of interest
+        var pointOfInterestFromStore = city.PointsOfInterest
+            .FirstOrDefault(c => c.Id == pointOfInterestId);
+        if (pointOfInterestFromStore == null)
+        {
+            return NotFound();
+        }
+
+        pointOfInterestFromStore.Name = pointOfInterest.Name;
+        pointOfInterestFromStore.Description = pointOfInterest.Description;
+
+        return NoContent();
     }
 }
